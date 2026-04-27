@@ -1,20 +1,28 @@
 -- FILE: packages/shared/src/db/schema.sql
--- PURPOSE: MySQL database schema for Ninja Shop
+-- PURPOSE: MySQL database schema for Ninja Shop (complete, includes all columns)
 -- SPEC: .kiro/specs/ninja-shop/design.md
--- Requirements: 14.1–14.9
 
 CREATE TABLE IF NOT EXISTS accounts (
-  id              INT AUTO_INCREMENT PRIMARY KEY,
-  account_number  VARCHAR(50) NOT NULL UNIQUE,
-  account_name    VARCHAR(100),
-  email           VARCHAR(255),
-  password        VARCHAR(255),
-  status          ENUM('available', 'rented') NOT NULL DEFAULT 'available',
-  rented_until    DATE,
-  renter_contact  VARCHAR(255),
-  notes           TEXT,
-  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  id                    INT AUTO_INCREMENT PRIMARY KEY,
+  account_number        VARCHAR(50) NOT NULL UNIQUE,
+  account_name          VARCHAR(100),
+  email                 VARCHAR(255),
+  password              VARCHAR(255),
+  notes                 TEXT,
+  -- PS5 Own
+  status_ps5_own        ENUM('available', 'rented') NOT NULL DEFAULT 'available',
+  price_ps5_own         DECIMAL(10, 2) DEFAULT NULL,
+  rented_until_ps5_own  DATETIME NULL,
+  -- PS5 Shop
+  status_ps5_shop       ENUM('available', 'rented') NOT NULL DEFAULT 'available',
+  price_ps5_shop        DECIMAL(10, 2) DEFAULT NULL,
+  rented_until_ps5_shop DATETIME NULL,
+  -- PS4
+  status_ps4            ENUM('available', 'rented') NOT NULL DEFAULT 'available',
+  price_ps4             DECIMAL(10, 2) DEFAULT NULL,
+  rented_until_ps4      DATETIME NULL,
+  created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS games (
@@ -58,7 +66,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
   password_hash VARCHAR(255) NOT NULL,
   email         VARCHAR(255),
   full_name     VARCHAR(100),
-  role          ENUM('admin', 'super_admin') NOT NULL DEFAULT 'admin',
+  role          ENUM('user', 'super_admin') NOT NULL DEFAULT 'user',
   is_active     TINYINT(1) NOT NULL DEFAULT 1,
   last_login    TIMESTAMP NULL,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -74,3 +82,5 @@ CREATE TABLE IF NOT EXISTS settings (
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_games_title ON games(title);

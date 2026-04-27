@@ -273,19 +273,6 @@ setup_database() {
     }
     
     print_success "Tables created"
-    
-    # Run migrations
-    print_info "Running migrations..."
-    
-    if [ -f packages/shared/src/db/migrate-add-prices.sql ]; then
-        mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null || true
-        print_success "Migration: add-prices"
-    fi
-    
-    if [ -f packages/shared/src/db/migrate-separate-status.sql ]; then
-        mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null || true
-        print_success "Migration: separate-status"
-    fi
 }
 
 # Install npm dependencies
@@ -309,6 +296,12 @@ install_dependencies() {
 # Seed database
 seed_database() {
     print_header "Seeding Database"
+    
+    # Copy .env to apps so Next.js can read it
+    print_info "Copying .env to apps..."
+    cp .env apps/customer/.env
+    cp .env apps/admin/.env
+    print_success ".env copied to apps"
     
     print_info "Running seed script..."
     npm run db:seed --workspace=@ninja-shop/shared || {
@@ -365,7 +358,7 @@ show_completion() {
     echo -e "  1. Start dev servers: ${YELLOW}npm run dev${NC}"
     echo -e "  2. Open customer site: ${YELLOW}http://localhost:7000${NC}"
     echo -e "  3. Open admin site: ${YELLOW}http://localhost:7001${NC}"
-    echo -e "  4. Admin login: ${YELLOW}admin / admin123${NC}"
+    echo -e "  4. Admin login: ${YELLOW}admin / admin1234${NC}"
     
     echo -e "\n${BLUE}Useful commands:${NC}"
     echo -e "  • ${YELLOW}npm run dev${NC} - Start both apps"

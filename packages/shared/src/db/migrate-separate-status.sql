@@ -1,12 +1,50 @@
 -- FILE: packages/shared/src/db/migrate-separate-status.sql
--- PURPOSE: Add separate rental status for each rental type
--- DATE: 2026-04-27
+-- PURPOSE: Add separate rental status/price/date columns (idempotent)
+-- NOTE: schema.sql ใหม่มี columns เหล่านี้แล้ว ไฟล์นี้ใช้สำหรับ database เก่าเท่านั้น
 
--- Add new columns (run manually if error "Duplicate column name")
-ALTER TABLE accounts 
-ADD COLUMN status_ps5_own ENUM('available', 'rented') NOT NULL DEFAULT 'available',
-ADD COLUMN status_ps5_shop ENUM('available', 'rented') NOT NULL DEFAULT 'available',
-ADD COLUMN status_ps4 ENUM('available', 'rented') NOT NULL DEFAULT 'available',
-ADD COLUMN rented_until_ps5_own DATETIME NULL,
-ADD COLUMN rented_until_ps5_shop DATETIME NULL,
-ADD COLUMN rented_until_ps4 DATETIME NULL;
+CALL sys.table_exists('ninja_shop', 'accounts', @tbl_type);
+
+-- status_ps5_own
+SET @c1 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='status_ps5_own');
+SET @s1 = IF(@c1=0, "ALTER TABLE accounts ADD COLUMN status_ps5_own ENUM('available','rented') NOT NULL DEFAULT 'available'", 'SELECT 1');
+PREPARE p1 FROM @s1; EXECUTE p1; DEALLOCATE PREPARE p1;
+
+-- status_ps5_shop
+SET @c2 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='status_ps5_shop');
+SET @s2 = IF(@c2=0, "ALTER TABLE accounts ADD COLUMN status_ps5_shop ENUM('available','rented') NOT NULL DEFAULT 'available'", 'SELECT 1');
+PREPARE p2 FROM @s2; EXECUTE p2; DEALLOCATE PREPARE p2;
+
+-- status_ps4
+SET @c3 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='status_ps4');
+SET @s3 = IF(@c3=0, "ALTER TABLE accounts ADD COLUMN status_ps4 ENUM('available','rented') NOT NULL DEFAULT 'available'", 'SELECT 1');
+PREPARE p3 FROM @s3; EXECUTE p3; DEALLOCATE PREPARE p3;
+
+-- price_ps5_own
+SET @c4 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='price_ps5_own');
+SET @s4 = IF(@c4=0, 'ALTER TABLE accounts ADD COLUMN price_ps5_own DECIMAL(10,2) DEFAULT NULL', 'SELECT 1');
+PREPARE p4 FROM @s4; EXECUTE p4; DEALLOCATE PREPARE p4;
+
+-- price_ps5_shop
+SET @c5 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='price_ps5_shop');
+SET @s5 = IF(@c5=0, 'ALTER TABLE accounts ADD COLUMN price_ps5_shop DECIMAL(10,2) DEFAULT NULL', 'SELECT 1');
+PREPARE p5 FROM @s5; EXECUTE p5; DEALLOCATE PREPARE p5;
+
+-- price_ps4
+SET @c6 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='price_ps4');
+SET @s6 = IF(@c6=0, 'ALTER TABLE accounts ADD COLUMN price_ps4 DECIMAL(10,2) DEFAULT NULL', 'SELECT 1');
+PREPARE p6 FROM @s6; EXECUTE p6; DEALLOCATE PREPARE p6;
+
+-- rented_until_ps5_own
+SET @c7 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='rented_until_ps5_own');
+SET @s7 = IF(@c7=0, 'ALTER TABLE accounts ADD COLUMN rented_until_ps5_own DATETIME NULL', 'SELECT 1');
+PREPARE p7 FROM @s7; EXECUTE p7; DEALLOCATE PREPARE p7;
+
+-- rented_until_ps5_shop
+SET @c8 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='rented_until_ps5_shop');
+SET @s8 = IF(@c8=0, 'ALTER TABLE accounts ADD COLUMN rented_until_ps5_shop DATETIME NULL', 'SELECT 1');
+PREPARE p8 FROM @s8; EXECUTE p8; DEALLOCATE PREPARE p8;
+
+-- rented_until_ps4
+SET @c9 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='accounts' AND COLUMN_NAME='rented_until_ps4');
+SET @s9 = IF(@c9=0, 'ALTER TABLE accounts ADD COLUMN rented_until_ps4 DATETIME NULL', 'SELECT 1');
+PREPARE p9 FROM @s9; EXECUTE p9; DEALLOCATE PREPARE p9;

@@ -2,34 +2,19 @@
  * FILE: packages/shared/src/db/seed.ts
  * PURPOSE: Seed initial data for Ninja Shop database (idempotent)
  *
- * SEEDS:
- *   - rental_prices: ps5_own (฿150), ps5_shop (฿100), ps4 (฿80) — 30 days each
- *   - admin_users: username='admin', password='admin1234' (bcrypt, cost 10), role='super_admin'
- *   - settings: line_url (null), facebook_url (null)
- *
  * DEPENDENCIES:
- *   - bcryptjs: Password hashing
- *   - packages/shared/src/db/client.ts: MySQL connection pool
- *
- * RELATED FILES:
- *   - packages/shared/src/db/schema.sql: Must be applied before seeding
+ *   - bcryptjs, mysql2, dotenv
  *
  * SPEC: .kiro/specs/ninja-shop/design.md
- * Requirements: 5.4, 10.1, 11.1
  */
 
 import bcrypt from 'bcryptjs'
 import pool from './client'
 
-console.log('🔍 Debug: DB_USER =', process.env.DB_USER)
-console.log('🔍 Debug: DB_HOST =', process.env.DB_HOST)
-console.log('🔍 Debug: DB_PASSWORD =', process.env.DB_PASSWORD ? '***' : 'undefined')
-
 async function seed(): Promise<void> {
   const conn = await pool.getConnection()
 
   try {
-    // Seed rental_prices
     await conn.query(`
       INSERT INTO rental_prices (rental_type, price, duration_days, description)
       VALUES
@@ -43,7 +28,6 @@ async function seed(): Promise<void> {
     `)
     console.log('✅ Seeded rental_prices')
 
-    // Seed admin_users
     const passwordHash = await bcrypt.hash('admin1234', 10)
     await conn.query(`
       INSERT INTO admin_users (username, password_hash, role)
@@ -54,16 +38,14 @@ async function seed(): Promise<void> {
     `, [passwordHash])
     console.log('✅ Seeded admin_users')
 
-    // Seed settings
     await conn.query(`
       INSERT INTO settings (setting_key, setting_value, description, data_type)
       VALUES
-        ('contact_url', 'https://line.me/R/ti/p/@700pgxfz', 'Contact URL (LINE/Facebook/etc)', 'string'),
-        ('line_url',     NULL, 'LINE contact URL (deprecated)',     'string'),
-        ('facebook_url', NULL, 'Facebook contact URL (deprecated)', 'string')
+        ('contact_url', 'https://line.me/R/ti/p/@700pgxfz', 'Contact URL', 'string'),
+        ('line_url',     NULL, 'LINE URL (deprecated)', 'string'),
+        ('facebook_url', NULL, 'Facebook URL (deprecated)', 'string')
       ON DUPLICATE KEY UPDATE
-        description = VALUES(description),
-        data_type   = VALUES(data_type)
+        description = VALUES(description)
     `)
     console.log('✅ Seeded settings')
 
