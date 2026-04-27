@@ -249,66 +249,39 @@ function GameCollage({ games }: GameCollageProps) {
     )
   }
 
-  // Determine grid layout and aspect ratio based on number of games
+  // Determine grid layout based on number of games — always fills square
   let gridClass = ''
-  let aspectClass = ''
   let displayGames = games
 
   if (games.length === 1) {
-    // 1 game: 1x1 grid, portrait aspect (game cover ratio)
     gridClass = 'grid-cols-1 grid-rows-1'
-    aspectClass = 'aspect-[3/4]'
     displayGames = games.slice(0, 1)
   } else if (games.length === 2) {
-    // 2 games: 2x1 grid, landscape
     gridClass = 'grid-cols-2 grid-rows-1'
-    aspectClass = 'aspect-[3/2]'
     displayGames = games.slice(0, 2)
-  } else if (games.length === 3) {
-    // 3 games: 3x1 grid
-    gridClass = 'grid-cols-3 grid-rows-1'
-    aspectClass = 'aspect-[9/4]'
-    displayGames = games.slice(0, 3)
   } else if (games.length <= 4) {
-    // 4 games: 2x2 grid, square aspect
     gridClass = 'grid-cols-2 grid-rows-2'
-    aspectClass = 'aspect-square'
     displayGames = games.slice(0, 4)
-  } else if (games.length <= 6) {
-    gridClass = 'grid-cols-3 grid-rows-2'
-    aspectClass = 'aspect-[3/2]'
-    displayGames = games.slice(0, 6)
   } else if (games.length <= 9) {
     gridClass = 'grid-cols-3 grid-rows-3'
-    aspectClass = 'aspect-square'
     displayGames = games.slice(0, 9)
-  } else if (games.length <= 12) {
-    gridClass = 'grid-cols-4 grid-rows-3'
-    aspectClass = 'aspect-[4/3]'
-    displayGames = games.slice(0, 12)
   } else if (games.length <= 16) {
     gridClass = 'grid-cols-4 grid-rows-4'
-    aspectClass = 'aspect-square'
     displayGames = games.slice(0, 16)
-  } else if (games.length <= 20) {
-    gridClass = 'grid-cols-5 grid-rows-4'
-    aspectClass = 'aspect-[5/4]'
-    displayGames = games.slice(0, 20)
   } else {
-    gridClass = 'grid-cols-6 grid-rows-4'
-    aspectClass = 'aspect-[3/2]'
-    displayGames = games.slice(0, 24)
+    gridClass = 'grid-cols-5 grid-rows-5'
+    displayGames = games.slice(0, 25)
   }
 
   return (
-    <div className={`grid ${gridClass} gap-0 w-full ${aspectClass} bg-card-bg overflow-hidden`}>
+    <div className={`grid ${gridClass} gap-0 w-full h-full`}>
       {displayGames.map((game) => (
         <div key={game.id} className="relative w-full h-full">
           <Image
             src={game.image_url}
             alt={game.title}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover"
           />
         </div>
