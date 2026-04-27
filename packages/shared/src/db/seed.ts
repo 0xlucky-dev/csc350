@@ -18,16 +18,12 @@
  * Requirements: 5.4, 10.1, 11.1
  */
 
-import { config } from 'dotenv'
-import { join } from 'path'
 import bcrypt from 'bcryptjs'
 import pool from './client'
 
-// Load .env from project root
-config({ path: join(process.cwd(), '.env') })
-
 console.log('🔍 Debug: DB_USER =', process.env.DB_USER)
 console.log('🔍 Debug: DB_HOST =', process.env.DB_HOST)
+console.log('🔍 Debug: DB_PASSWORD =', process.env.DB_PASSWORD ? '***' : 'undefined')
 
 async function seed(): Promise<void> {
   const conn = await pool.getConnection()

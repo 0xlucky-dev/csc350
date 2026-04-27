@@ -16,7 +16,7 @@
     "lint": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "db:seed": "tsx src/db/seed.ts",
+    "db:seed": "node --env-file=../../.env --loader tsx/esm src/db/seed.ts",
     "db:import-games": "tsx src/db/import-games.ts",
     "db:clean-games": "tsx src/db/clean-games.ts",
     "db:testdb": "node src/db/testdb.js"
