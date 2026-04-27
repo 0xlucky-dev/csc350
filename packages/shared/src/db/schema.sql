@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 CREATE TABLE IF NOT EXISTS games (
   id               INT AUTO_INCREMENT PRIMARY KEY,
-  title            VARCHAR(255) NOT NULL,
+  title            VARCHAR(255) NOT NULL UNIQUE,
   title_en         VARCHAR(255),
   image_url        TEXT,
   thumbnail_url    TEXT,

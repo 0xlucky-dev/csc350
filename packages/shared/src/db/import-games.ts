@@ -68,15 +68,19 @@ async function importGames(): Promise<void> {
                 continue
               }
               
-              // Insert game (only name, image, platforms)
+              // Insert game — skip duplicates by title
               await conn.query(
                 `INSERT INTO games (title, image_url, thumbnail_url, genre) 
-                 VALUES (?, ?, ?, ?)`,
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                   image_url     = IF(VALUES(image_url) != '', VALUES(image_url), image_url),
+                   thumbnail_url = IF(VALUES(thumbnail_url) != '', VALUES(thumbnail_url), thumbnail_url),
+                   genre         = IF(genre IS NULL OR genre = '', VALUES(genre), genre)`,
                 [
                   game.name,
                   game.image,
-                  game.image, // Use same image for thumbnail
-                  game.platforms.join(', ') // Store platforms in genre field (e.g. "PS4, PS5")
+                  game.image,
+                  game.platforms.join(', ')
                 ]
               )
               
