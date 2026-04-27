@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'ภาพรวม' },
   { href: '/dashboard/accounts', label: 'ไอดี' },
   { href: '/dashboard/games', label: 'เกม' },
+  { href: '/dashboard/users', label: 'ผู้ใช้' },
   { href: '/dashboard/settings', label: 'ตั้งค่า' },
 ]
 
