@@ -18,9 +18,13 @@
  * Requirements: 5.4, 10.1, 11.1
  */
 
-import 'dotenv/config'
+import { config } from 'dotenv'
+import { resolve } from 'path'
 import bcrypt from 'bcryptjs'
 import pool from './client'
+
+// Load .env from project root (2 levels up from this file)
+config({ path: resolve(__dirname, '../../../.env') })
 
 async function seed(): Promise<void> {
   const conn = await pool.getConnection()
