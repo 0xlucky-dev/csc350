@@ -17,8 +17,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "db:seed": "export $(grep -v '^#' ../../.env | xargs) && tsx src/db/seed.ts",
-    "db:import-games": "tsx src/db/import-games.ts",
-    "db:clean-games": "tsx src/db/clean-games.ts",
+    "db:import-games": "export $(grep -v '^#' ../../.env | xargs) && tsx src/db/import-games.ts",
+    "db:clean-games": "export $(grep -v '^#' ../../.env | xargs) && tsx src/db/clean-games.ts",
     "db:testdb": "node src/db/testdb.js"
   },
   "dependencies": {
