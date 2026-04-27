@@ -19,15 +19,15 @@
  */
 
 import { config } from 'dotenv'
-import { resolve, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 import bcrypt from 'bcryptjs'
 import pool from './client'
 
-// Load .env from project root (3 levels up from this file)
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-config({ path: resolve(__dirname, '../../../.env') })
+// Load .env from project root
+config({ path: join(process.cwd(), '.env') })
+
+console.log('🔍 Debug: DB_USER =', process.env.DB_USER)
+console.log('🔍 Debug: DB_HOST =', process.env.DB_HOST)
 
 async function seed(): Promise<void> {
   const conn = await pool.getConnection()
