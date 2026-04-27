@@ -218,25 +218,21 @@ setup_database() {
     # Create database
     print_info "Creating database..."
     
-    if [ -z "$DB_PASSWORD" ]; then
-        # No password
-        sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || {
-            print_error "Failed to create database"
-            exit 1
-        }
+    # Always use sudo for MySQL on Ubuntu (auth_socket plugin)
+    sudo mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || {
+        print_error "Failed to create database"
+        print_info "Trying alternative method..."
         
-        # Grant privileges
-        sudo mysql -u root -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost' IDENTIFIED BY '';" 2>/dev/null || \
-        sudo mysql -u root -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost'; GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost'; FLUSH PRIVILEGES;" || {
-            print_warning "Failed to grant privileges (might be OK if user already exists)"
-        }
-    else
-        # With password
-        mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || {
-            print_error "Failed to create database"
+        # Try with password if provided
+        if [ -n "$DB_PASSWORD" ]; then
+            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || {
+                print_error "Failed to create database with password"
+                exit 1
+            }
+        else
             exit 1
-        }
-    fi
+        fi
+    }
     
     print_success "Database created: $DB_NAME"
     
@@ -248,17 +244,19 @@ setup_database() {
         exit 1
     fi
     
-    if [ -z "$DB_PASSWORD" ]; then
-        sudo mysql -u root "$DB_NAME" < packages/shared/src/db/schema.sql || {
+    # Use sudo for MySQL
+    sudo mysql "$DB_NAME" < packages/shared/src/db/schema.sql || {
+        # Try with password if sudo fails
+        if [ -n "$DB_PASSWORD" ]; then
+            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/schema.sql || {
+                print_error "Failed to create tables"
+                exit 1
+            }
+        else
             print_error "Failed to create tables"
             exit 1
-        }
-    else
-        mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/schema.sql || {
-            print_error "Failed to create tables"
-            exit 1
-        }
-    fi
+        fi
+    }
     
     print_success "Tables created"
     
@@ -266,20 +264,14 @@ setup_database() {
     print_info "Running migrations..."
     
     if [ -f packages/shared/src/db/migrate-add-prices.sql ]; then
-        if [ -z "$DB_PASSWORD" ]; then
-            sudo mysql -u root "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null || true
-        else
-            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null || true
-        fi
+        sudo mysql "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null || \
+        ([ -n "$DB_PASSWORD" ] && mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null) || true
         print_success "Migration: add-prices"
     fi
     
     if [ -f packages/shared/src/db/migrate-separate-status.sql ]; then
-        if [ -z "$DB_PASSWORD" ]; then
-            sudo mysql -u root "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null || true
-        else
-            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null || true
-        fi
+        sudo mysql "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null || \
+        ([ -n "$DB_PASSWORD" ] && mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null) || true
         print_success "Migration: separate-status"
     fi
 }

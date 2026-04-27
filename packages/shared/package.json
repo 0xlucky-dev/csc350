@@ -18,10 +18,12 @@
     "test:run": "vitest run",
     "db:seed": "tsx src/db/seed.ts",
     "db:import-games": "tsx src/db/import-games.ts",
-    "db:clean-games": "tsx src/db/clean-games.ts"
+    "db:clean-games": "tsx src/db/clean-games.ts",
+    "db:testdb": "node src/db/testdb.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "dotenv": "^17.4.2",
     "mysql2": "^3.9.1",
     "zod": "^3.22.4"
   },
