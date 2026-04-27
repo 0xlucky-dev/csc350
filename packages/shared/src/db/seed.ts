@@ -19,11 +19,14 @@
  */
 
 import { config } from 'dotenv'
-import { resolve } from 'path'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
 import bcrypt from 'bcryptjs'
 import pool from './client'
 
-// Load .env from project root (2 levels up from this file)
+// Load .env from project root (3 levels up from this file)
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 config({ path: resolve(__dirname, '../../../.env') })
 
 async function seed(): Promise<void> {
