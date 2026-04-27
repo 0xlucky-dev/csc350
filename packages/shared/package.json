@@ -19,7 +19,7 @@
     "db:seed": "export $(grep -v '^#' ../../.env | xargs) && tsx src/db/seed.ts",
     "db:import-games": "export $(grep -v '^#' ../../.env | xargs) && tsx src/db/import-games.ts",
     "db:clean-games": "export $(grep -v '^#' ../../.env | xargs) && tsx src/db/clean-games.ts",
-    "db:testdb": "node src/db/testdb.js"
+    "db:testdb": "export $(grep -v '^#' ../../.env | xargs) && tsx src/db/testdb.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
