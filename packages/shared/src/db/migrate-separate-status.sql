@@ -2,14 +2,11 @@
 -- PURPOSE: Add separate rental status for each rental type
 -- DATE: 2026-04-27
 
--- Add new columns for separate rental status
+-- Add new columns (run manually if error "Duplicate column name")
 ALTER TABLE accounts 
-ADD COLUMN IF NOT EXISTS status_ps5_own ENUM('available', 'rented') NOT NULL DEFAULT 'available',
-ADD COLUMN IF NOT EXISTS status_ps5_shop ENUM('available', 'rented') NOT NULL DEFAULT 'available',
-ADD COLUMN IF NOT EXISTS status_ps4 ENUM('available', 'rented') NOT NULL DEFAULT 'available',
-ADD COLUMN IF NOT EXISTS rented_until_ps5_own DATETIME NULL,
-ADD COLUMN IF NOT EXISTS rented_until_ps5_shop DATETIME NULL,
-ADD COLUMN IF NOT EXISTS rented_until_ps4 DATETIME NULL;
-
--- Keep old columns for backward compatibility (will be removed later)
--- status and rented_until columns remain
+ADD COLUMN status_ps5_own ENUM('available', 'rented') NOT NULL DEFAULT 'available',
+ADD COLUMN status_ps5_shop ENUM('available', 'rented') NOT NULL DEFAULT 'available',
+ADD COLUMN status_ps4 ENUM('available', 'rented') NOT NULL DEFAULT 'available',
+ADD COLUMN rented_until_ps5_own DATETIME NULL,
+ADD COLUMN rented_until_ps5_shop DATETIME NULL,
+ADD COLUMN rented_until_ps4 DATETIME NULL;
