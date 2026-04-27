@@ -18,6 +18,7 @@
  * Requirements: 5.4, 10.1, 11.1
  */
 
+import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import pool from './client'
 

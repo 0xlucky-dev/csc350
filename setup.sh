@@ -205,36 +205,58 @@ setup_database() {
     fi
     
     # Read database credentials from .env
-    DB_HOST=$(grep DB_HOST .env | cut -d '=' -f2 | tr -d ' "' || echo "localhost")
+    DB_HOST=$(grep DB_HOST .env | cut -d '=' -f2 | tr -d ' "' || echo "127.0.0.1")
     DB_PORT=$(grep DB_PORT .env | cut -d '=' -f2 | tr -d ' "' || echo "3306")
-    DB_USER=$(grep DB_USER .env | cut -d '=' -f2 | tr -d ' "' || echo "root")
-    DB_PASSWORD=$(grep DB_PASSWORD .env | cut -d '=' -f2 | tr -d ' "' || echo "")
+    DB_USER=$(grep DB_USER .env | cut -d '=' -f2 | tr -d ' "' || echo "ninja_shop")
+    DB_PASSWORD=$(grep DB_PASSWORD .env | cut -d '=' -f2 | tr -d ' "' || echo "ninja_shop_password")
     DB_NAME=$(grep DB_NAME .env | cut -d '=' -f2 | tr -d ' "' || echo "ninja_shop")
     
     print_info "Database: $DB_NAME"
     print_info "User: $DB_USER"
     print_info "Host: $DB_HOST:$DB_PORT"
     
+    # Fix IPv6 issue: Comment out ::1 localhost in /etc/hosts
+    print_info "Fixing IPv6 localhost issue..."
+    if grep -q "^::1.*localhost" /etc/hosts 2>/dev/null; then
+        sudo sed -i 's/^::1\(.*localhost.*\)/#::1\1/' /etc/hosts
+        print_success "IPv6 localhost disabled (using IPv4 only)"
+    fi
+    
+    # Create MySQL user with password (Ubuntu 24.04 uses auth_socket for root)
+    print_info "Creating MySQL user: $DB_USER..."
+    sudo mysql -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';" || {
+        print_error "Failed to create MySQL user"
+        exit 1
+    }
+    
     # Create database
     print_info "Creating database..."
-    
-    # Always use sudo for MySQL on Ubuntu (auth_socket plugin)
     sudo mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || {
         print_error "Failed to create database"
-        print_info "Trying alternative method..."
-        
-        # Try with password if provided
-        if [ -n "$DB_PASSWORD" ]; then
-            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || {
-                print_error "Failed to create database with password"
-                exit 1
-            }
-        else
-            exit 1
-        fi
+        exit 1
+    }
+    
+    # Grant privileges
+    print_info "Granting privileges..."
+    sudo mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';" || {
+        print_error "Failed to grant privileges"
+        exit 1
+    }
+    
+    sudo mysql -e "FLUSH PRIVILEGES;" || {
+        print_error "Failed to flush privileges"
+        exit 1
     }
     
     print_success "Database created: $DB_NAME"
+    print_success "User created: $DB_USER"
+    
+    # Update .env with correct credentials
+    print_info "Updating .env with new credentials..."
+    sed -i "s/^DB_HOST=.*/DB_HOST=127.0.0.1/" .env
+    sed -i "s/^DB_USER=.*/DB_USER=$DB_USER/" .env
+    sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASSWORD/" .env
+    print_success ".env updated"
     
     # Run schema
     print_info "Creating tables..."
@@ -244,18 +266,10 @@ setup_database() {
         exit 1
     fi
     
-    # Use sudo for MySQL
-    sudo mysql "$DB_NAME" < packages/shared/src/db/schema.sql || {
-        # Try with password if sudo fails
-        if [ -n "$DB_PASSWORD" ]; then
-            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/schema.sql || {
-                print_error "Failed to create tables"
-                exit 1
-            }
-        else
-            print_error "Failed to create tables"
-            exit 1
-        fi
+    # Use new user credentials
+    mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/schema.sql || {
+        print_error "Failed to create tables"
+        exit 1
     }
     
     print_success "Tables created"
@@ -264,14 +278,12 @@ setup_database() {
     print_info "Running migrations..."
     
     if [ -f packages/shared/src/db/migrate-add-prices.sql ]; then
-        sudo mysql "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null || \
-        ([ -n "$DB_PASSWORD" ] && mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null) || true
+        mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-add-prices.sql 2>/dev/null || true
         print_success "Migration: add-prices"
     fi
     
     if [ -f packages/shared/src/db/migrate-separate-status.sql ]; then
-        sudo mysql "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null || \
-        ([ -n "$DB_PASSWORD" ] && mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null) || true
+        mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < packages/shared/src/db/migrate-separate-status.sql 2>/dev/null || true
         print_success "Migration: separate-status"
     fi
 }
@@ -299,7 +311,7 @@ seed_database() {
     print_header "Seeding Database"
     
     print_info "Running seed script..."
-    npm run db:seed || {
+    npm run db:seed --workspace=@ninja-shop/shared || {
         print_error "Failed to seed database"
         exit 1
     }
@@ -318,7 +330,7 @@ import_games() {
     fi
     
     print_info "Importing games from catalog..."
-    npm run db:import-games || {
+    npm run db:import-games --workspace=@ninja-shop/shared || {
         print_error "Failed to import games"
         exit 1
     }
@@ -331,7 +343,7 @@ clean_games() {
     print_header "Cleaning Duplicate Games"
     
     print_info "Removing duplicate games..."
-    npm run db:clean-games || {
+    npm run db:clean-games --workspace=@ninja-shop/shared || {
         print_warning "Failed to clean games (might be OK if script doesn't exist)"
         return
     }
